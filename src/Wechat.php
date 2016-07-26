@@ -54,7 +54,7 @@ class Wechat
      * @param  boolean $force 强制初始化
      * @return [type]
      */
-    public static function init($config = [], $force = false)
+    public static function instance($config = [], $force = false)
     {
         static $wechat;
         if (is_null($wechat) || $force == true) {
