@@ -44,9 +44,9 @@ class Reply extends Wechat
 
     /**
      * 回复消息
-     * @param  [type] $content [description]
-     * @param  string $type    [description]
-     * @return [type]          [description]
+     * @param  array|string $content 回复的消息内容
+     * @param  string $type 回复的消息类型
+     * @return xml
      */
     public static function response($content, $type = 'text')
     {
@@ -70,6 +70,56 @@ class Reply extends Wechat
     private static function text($content)
     {
         self::$response['Content'] = $content;
+    }
+
+    /**
+     * 回复图片类型消息
+     * @param  string $mediaId
+     */
+    private static function image($mediaId)
+    {
+        self::$response['Image']['MediaId'] = $mediaId;
+    }
+
+    /**
+     * 回复语音类型消息
+     * @param  string $mediaId
+     */
+    private static function voice($mediaId)
+    {
+        self::$response['Voice']['MediaId'] = $mediaId;
+    }
+
+    /**
+     * 回复视频类型消息
+     * @param  array $media
+     */
+    private static function video($video)
+    {
+        list(
+            $video['MediaId'],
+            $video['Title'],
+            $video['Description']
+        ) = $video;
+
+        self::$response['Video'] = $video;
+    }
+
+    /**
+     * 回复音乐信息
+     * @param  string $content 要回复的音乐
+     */
+    private static function music($music)
+    {
+        list(
+            $music['Title'],
+            $music['Description'],
+            $music['MusicUrl'],
+            $music['HQMusicUrl'],
+            $music['ThumbMediaId']
+        ) = $music;
+
+        self::$response['Music'] = $music;
     }
 
     /**
@@ -97,18 +147,24 @@ class Reply extends Wechat
     }
 
     /**
-     * 回复音乐信息
-     * @param  string $content 要回复的音乐
+     * 将消息转发至客服
+     * @param  string $account 指定的客服账号
+     * @return xml
      */
-    private static function music($music)
+    public static function transfer($account = '')
     {
-        list(
-            $music['Title'],
-            $music['Description'],
-            $music['MusicUrl'],
-            $music['HQMusicUrl']
-        ) = $music;
+        self::$response = [
+            'ToUserName'   => self::$request['fromusername'],
+            'FromUserName' => self::$request['tousername'],
+            'CreateTime'   => time(),
+            'MsgType'      => 'transfer_customer_service',
+        ];
 
-        self::$response['Music'] = $music;
+        if (!empty($account)) {
+            self::$response['TransInfo']['KfAccount'] = $account;
+        }
+
+        $response = Utils::array2xml(self::$response);
+        exit($response);
     }
 }

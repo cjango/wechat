@@ -240,7 +240,7 @@ class Service extends Wechat
      * 获取未接入会话列表
      * @return array
      */
-    public function session_wait()
+    public static function session_wait()
     {
         $params = [
             'access_token' => parent::$config['access_token'],
