@@ -75,7 +75,6 @@ class Wechat
         } else {
             !self::checkSignature() && exit('Access Denied!');
         }
-        return true;
     }
 
     /**

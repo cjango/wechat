@@ -23,7 +23,7 @@ class Pay extends Wechat
         'unified_order'       => 'https://api.mch.weixin.qq.com/pay/unifiedorder', // 统一下单地址
         'order_query'         => 'https://api.mch.weixin.qq.com/pay/orderquery', // 订单状态查询
         'close_order'         => 'https://api.mch.weixin.qq.com/pay/closeorder', // 关闭订单
-        'pay_refund_order'    => 'https://api.mch.weixin.qq.com/secapi/pay/refund', // 退款地址
+        'refund_order'        => 'https://api.mch.weixin.qq.com/secapi/pay/refund', // 退款地址
         'refund_query'        => 'https://api.mch.weixin.qq.com/pay/refundquery', // 退款查询
         'pay_transfers'       => 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers', // 企业付款
         'get_pay_transfers'   => 'https://api.mch.weixin.qq.com/mmpaymkttransfers/gettransferinfo', // 企业付款查询
@@ -45,7 +45,7 @@ class Pay extends Wechat
      * @param  array  $extends    订单扩展数据
      * @return boolean|JSON       直接用于H5调用支付的API参数
      */
-    public static function unifiedOrder($orderId, $body, $money, $tradeType = 'JSAPI', $notifyUrl = '', $openid = '', $attach = '', $extends = [])
+    public static function unified($orderId, $body, $money, $tradeType = 'JSAPI', $notifyUrl = '', $openid = '', $attach = '', $extends = [])
     {
         $params = [
             'appid'            => parent::$config['appid'],
@@ -98,7 +98,7 @@ class Pay extends Wechat
      * @param  [type] $out_trade_no [description]
      * @return [type]               [description]
      */
-    public static function orderQuery($orderId = '', $type = 'out_trade_no')
+    public static function query($orderId = '', $type = 'out_trade_no')
     {
         $params = [
             'appid'     => parent::$config['appid'],
@@ -114,6 +114,69 @@ class Pay extends Wechat
         $data           = Utils::array2xml($params);
         $data           = Utils::http(self::$url['order_query'], $data, 'POST');
         return Utils::xml2array($data);
+    }
+
+    /**
+     * 关闭订单
+     * @param  string  $orderId 商户订单号
+     * @return boolean
+     */
+    public static function close($orderId)
+    {
+        $params = [
+            'appid'        => parent::$config['appid'],
+            'mch_id'       => parent::$config['mch_id'],
+            'out_trade_no' => $orderId,
+            'nonce_str'    => uniqid(),
+        ];
+
+        $params['sign'] = self::_getOrderSign($params);
+
+        $data   = Utils::array2xml($params);
+        $data   = Utils::http(self::$url['close_order'], $data, 'POST');
+        $result = self::parsePayResult(Utils::xml2array($data));
+
+        if ($result) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 退款申请
+     * @param  [type] $transaction_id [description]
+     * @param  [type] $orderId        [description]
+     * @param  [type] $out_refund_no  [description]
+     * @param  [type] $total_fee      [description]
+     * @param  [type] $refund_fee     [description]
+     * @param  [type] $op_user_id     [description]
+     * @return [type]                 [description]
+     */
+    public static function refund($orderId, $refundId, $total_fee, $refund_fee)
+    {
+        $params = [
+            'appid'         => parent::$config['appid'],
+            'mch_id'        => parent::$config['mch_id'],
+            'out_trade_no'  => $orderId,
+            'out_refund_no' => $refundId,
+            'total_fee'     => $total_fee,
+            'refund_fee'    => $refund_fee,
+            'op_user_id'    => parent::$config['mch_id'],
+            'nonce_str'     => uniqid(),
+        ];
+
+        $params['sign'] = self::_getOrderSign($params);
+
+        $data   = Utils::array2xml($params);
+        $data   = Utils::http(self::$url['close_order'], $data, 'POST');
+        $result = self::parsePayResult(Utils::xml2array($data));
+
+        if ($result) {
+            return $result;
+        } else {
+            return false;
+        }
     }
 
     /**

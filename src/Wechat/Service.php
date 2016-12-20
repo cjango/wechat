@@ -25,7 +25,8 @@ class Service extends Wechat
         'service_add'    => 'https://api.weixin.qq.com/customservice/kfaccount/add',
         'service_update' => 'https://api.weixin.qq.com/customservice/kfaccount/update',
         'service_delete' => 'https://api.weixin.qq.com/customservice/kfaccount/del',
-        'upload_avatr'   => 'Http://api.weixin.qq.com/customservice/kfaccount/uploadheadimg',
+        'invite_worker'  => 'https://api.weixin.qq.com/customservice/kfaccount/inviteworker',
+        'upload_avatr'   => 'http://api.weixin.qq.com/customservice/kfaccount/uploadheadimg',
         'msg_record'     => 'https://api.weixin.qq.com/customservice/msgrecord/getrecord',
         'custom_send'    => 'https://api.weixin.qq.com/cgi-bin/message/custom/send',
         'session_create' => 'https://api.weixin.qq.com/customservice/kfsession/create',
@@ -37,7 +38,7 @@ class Service extends Wechat
 
     /**
      * 获取客服列表
-     * @return [type] [description]
+     * @return array|boolean
      */
     public static function get()
     {
@@ -51,11 +52,11 @@ class Service extends Wechat
 
     /**
      * 获取在线客服
-     * @return [type] [description]
+     * @return array|boolean
      */
     public static function online()
     {
-        return Utils::api(self::$url['online_list'] . '?access_token=' . parent::$config['access_token']);
+        $result = Utils::api(self::$url['online_list'] . '?access_token=' . parent::$config['access_token']);
         if ($result) {
             return $result['kf_online_list'];
         } else {
@@ -65,16 +66,14 @@ class Service extends Wechat
 
     /**
      * 添加客服账号
-     * @param [type] $account  [description]
-     * @param [type] $nickname [description]
-     * @param [type] $password [description]
+     * @param string $account
+     * @param string $nickname
      */
-    public static function add($account, $nickname, $password)
+    public static function add($account, $nickname)
     {
         $params = [
-            'kf_account' => $account,
+            'kf_account' => $account . '@' . parent::$config['appid'],
             'nickname'   => $nickname,
-            'password'   => md5($password),
         ];
         $params = json_encode($params, JSON_UNESCAPED_UNICODE);
         return Utils::api(self::$url['service_add'] . '?access_token=' . parent::$config['access_token'], $params, 'POST');
@@ -82,17 +81,16 @@ class Service extends Wechat
 
     /**
      * 修改客服账号
-     * @param  [type] $account  [description]
-     * @param  [type] $nickname [description]
-     * @param  [type] $password [description]
-     * @return [type]           [description]
+     * @param  string  $account
+     * @param  string  $nickname
+     * @param  string  $password
+     * @return boolean
      */
-    public static function update($account, $nickname, $password)
+    public static function update($account, $nickname)
     {
         $params = [
             'kf_account' => $account,
             'nickname'   => $nickname,
-            'password'   => md5($password),
         ];
         $params = json_encode($params, JSON_UNESCAPED_UNICODE);
         return Utils::api(self::$url['service_update'] . '?access_token=' . parent::$config['access_token'], $params, 'POST');
@@ -100,8 +98,8 @@ class Service extends Wechat
 
     /**
      * 删除客服账号
-     * @param  [type] $account [description]
-     * @return [type]          [description]
+     * @param  string  $account
+     * @return boolean
      */
     public static function delete($account)
     {
@@ -109,17 +107,32 @@ class Service extends Wechat
             'kf_account'   => $account,
             'access_token' => parent::$config['access_token'],
         ];
-        $params = json_encode($params, JSON_UNESCAPED_UNICODE);
         return Utils::api(self::$url['service_delete'], $params);
     }
 
     /**
+     * 邀请绑定客服
+     * @param  string $account
+     * @param  string $weixin
+     * @return boolean
+     */
+    public static function invite($account, $weixin)
+    {
+        $params = [
+            'kf_account' => $account,
+            'invite_wx'  => $weixin,
+        ];
+        $params = json_encode($params, JSON_UNESCAPED_UNICODE);
+        return Utils::api(self::$url['invite_worker'] . '?access_token=' . parent::$config['access_token'], $params, 'POST');
+    }
+
+    /**
      * 获取客服聊天记录
-     * @param  [type]  $starttime [description]
-     * @param  [type]  $endtime   [description]
-     * @param  integer $pageindex [description]
-     * @param  integer $pagesize  [description]
-     * @return [type]             [description]
+     * @param  integer $starttime
+     * @param  integer $endtime
+     * @param  integer $pageindex
+     * @param  integer $pagesize
+     * @return array|boolean
      */
     public static function record($starttime, $endtime, $pageindex = 1, $pagesize = 50)
     {
@@ -140,9 +153,9 @@ class Service extends Wechat
 
     /**
      * 发送客服消息
-     * @param  [type] $openid
-     * @param  [type] $type
-     * @param  [type] $content
+     * @param  string  $openid
+     * @param  string  $type
+     * @param  string  $content
      * @return boolean
      */
     public static function send($openid, $type, $content)
@@ -160,17 +173,15 @@ class Service extends Wechat
 
     /**
      * 创建会话
-     * @param  [type] $account 完整客服账号
-     * @param  [type] $openid  客户openid
-     * @param  string $text    附加信息，文本会展示在客服人员的多客服客户端
+     * @param  string  $account 完整客服账号
+     * @param  string  $openid  客户openid
      * @return boolean
      */
-    public static function session_create($account, $openid, $text = '')
+    public static function session_create($account, $openid)
     {
         $params = [
             'kf_account' => $account,
             'openid'     => $openid,
-            'text'       => $text,
         ];
         $params = json_encode($params, JSON_UNESCAPED_UNICODE);
         return Utils::api(self::$url['session_create'] . '?access_token=' . parent::$config['access_token'], $params, 'POST');
@@ -178,17 +189,15 @@ class Service extends Wechat
 
     /**
      * 关闭会话
-     * @param  [type] $account 完整客服账号
-     * @param  [type] $openid  客户openid
-     * @param  string $text    附加信息，文本会展示在客服人员的多客服客户端
+     * @param  string  $account 完整客服账号
+     * @param  string  $openid  客户openid
      * @return boolean
      */
-    public static function session_close($account, $openid, $text = '')
+    public static function session_close($account, $openid)
     {
         $params = [
             'kf_account' => $account,
             'openid'     => $openid,
-            'text'       => $text,
         ];
         $params = json_encode($params, JSON_UNESCAPED_UNICODE);
         return Utils::api(self::$url['session_close'] . '?access_token=' . parent::$config['access_token'], $params, 'POST');
@@ -196,7 +205,7 @@ class Service extends Wechat
 
     /**
      * 获取客户的会话状态
-     * @param  [type] $openid 客户openid
+     * @param  string $openid 客户openid
      * @return array
      */
     public static function session_get($openid)
@@ -210,8 +219,8 @@ class Service extends Wechat
 
     /**
      * 获取客服的会话列表
-     * @param  [type] $account [description]
-     * @return [type]          [description]
+     * @param  string $account
+     * @return array
      */
     public static function session_list($account)
     {
@@ -229,7 +238,7 @@ class Service extends Wechat
 
     /**
      * 获取未接入会话列表
-     * @return [type] [description]
+     * @return array
      */
     public function session_wait()
     {
