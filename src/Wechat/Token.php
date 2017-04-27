@@ -25,6 +25,10 @@ class Token extends Wechat
         'jsapi_ticket' => 'https://api.weixin.qq.com/cgi-bin/ticket/getticket', // JSAPI_TICKET获取地址
     ];
 
+    /**
+     * 获取ACCESS_TOKEN
+     * @return [type] [description]
+     */
     public static function get()
     {
         $params = [
@@ -40,8 +44,22 @@ class Token extends Wechat
         }
     }
 
+    /**
+     * 获取JSAPI_TICKET
+     * @return [type] [description]
+     */
     public static function ticket()
     {
-        #Todo..
+        $params = [
+            'access_token' => parent::$config['access_token'],
+            'type'         => 'jsapi',
+        ];
+        $result = Utils::http(self::$url['jsapi_ticket'], $params);
+        if ($result) {
+            $result = json_decode($result, true);
+            return $result['ticket'];
+        } else {
+            return false;
+        }
     }
 }
