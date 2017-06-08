@@ -85,7 +85,7 @@ class Pay extends Wechat
     private static function createPayParams($prepay_id)
     {
         $params['appId']     = parent::$config['appid'];
-        $params['timeStamp'] = (string) NOW_TIME;
+        $params['timeStamp'] = (string) time();
         $params['nonceStr']  = uniqid();
         $params['package']   = 'prepay_id=' . $prepay_id;
         $params['signType']  = 'MD5';
