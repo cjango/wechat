@@ -97,12 +97,13 @@ class Template extends Wechat
      * @param  string $url        连接URL
      * @return boolean
      */
-    public static function send($openid, $templateId, $data = [], $url = '')
+    public static function send($openid, $templateId, $data = [], $url = '', $topcolor = '')
     {
         $params = [
             'touser'      => $openid,
             'template_id' => $templateId,
             'url'         => $url,
+            'topcolor'    => $topcolor,
             'data'        => $data,
         ];
         $params = json_encode($params, JSON_UNESCAPED_UNICODE);

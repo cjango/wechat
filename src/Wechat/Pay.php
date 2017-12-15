@@ -180,6 +180,45 @@ class Pay extends Wechat
     }
 
     /**
+     * [redpack description]
+     * @param  [type] $orderId  [description]
+     * @param  [type] $openid   [description]
+     * @param  [type] $money    [description]
+     * @param  [type] $sendName [description]
+     * @param  [type] $wishing  [description]
+     * @param  [type] $remark   [description]
+     * @return [type]           [description]
+     */
+    public function redpack($orderId, $openid, $money, $sendName, $wishing, $remark)
+    {
+        $params = [
+            'nonce_str'    => uniqid(),
+            'mch_id'       => parent::$config['mch_id'],
+            'mch_billno'   => $orderId,
+            'wxappid'      => parent::$config['appid'],
+            'send_name'    => $sendName,
+            're_openid'    => $openid,
+            'total_amount' => $money * 100,
+            'total_num'    => 1,
+            'wishing'      => $wishing,
+            'client_ip'    => self::_getClientIp(),
+            'remark'       => $remark,
+        ];
+
+        $params['sign'] = self::_getOrderSign($params);
+
+        $data   = Utils::array2xml($params);
+        $data   = Utils::http(self::$url['send_red_pack'], $data, 'POST', true);
+        $result = self::parsePayResult(Utils::xml2array($data));
+
+        if ($result) {
+            return $result;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * 解析支付接口的返回结果
      * @param  xmlstring $data      接口返回的数据
      * @param  boolean   $checkSign 是否需要签名校验
