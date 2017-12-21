@@ -227,6 +227,22 @@ class Utils
                 $opts[CURLOPT_POSTFIELDS] = $params;
                 break;
         }
+        if ($ssl) {
+            $pem = Wechat::getConfig('pem');
+            if (!file_exists($pem['cert'])) {
+                Wechat::error('证书不存在');
+                return false;
+            }
+            if (!file_exists($pem['key'])) {
+                Wechat::error('密钥不存在');
+                return false;
+            }
+            $opts[CURLOPT_SSLCERTTYPE] = 'PEM';
+            $opts[CURLOPT_SSLCERT]     = $pem['cert'];
+            $opts[CURLOPT_SSLKEYTYPE]  = 'PEM';
+            $opts[CURLOPT_SSLKEY]      = $pem['key'];
+        }
+
         /* 初始化并执行curl请求 */
         $ch = curl_init();
         curl_setopt_array($ch, $opts);
@@ -235,7 +251,7 @@ class Utils
         $errmsg = curl_error($ch);
         curl_close($ch);
         if ($err > 0) {
-            \cjango\Wechat::error('CURL:' . $errmsg);
+            Wechat::error('CURL:' . $errmsg);
             return false;
         } else {
             return $data;

@@ -160,8 +160,8 @@ class Pay extends Wechat
             'mch_id'        => parent::$config['mch_id'],
             'out_trade_no'  => $orderId,
             'out_refund_no' => $refundId,
-            'total_fee'     => $total_fee,
-            'refund_fee'    => $refund_fee,
+            'total_fee'     => $total_fee * 100,
+            'refund_fee'    => $refund_fee * 100,
             'op_user_id'    => parent::$config['mch_id'],
             'nonce_str'     => uniqid(),
         ];
@@ -169,11 +169,15 @@ class Pay extends Wechat
         $params['sign'] = self::_getOrderSign($params);
 
         $data   = Utils::array2xml($params);
-        $data   = Utils::http(self::$url['close_order'], $data, 'POST');
-        $result = self::parsePayResult(Utils::xml2array($data));
+        $result = Utils::http(self::$url['refund_order'], $data, 'POST', true);
 
         if ($result) {
-            return $result;
+            $result = self::parsePayResult(Utils::xml2array($result));
+            if ($result) {
+                return $result;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }
@@ -189,7 +193,7 @@ class Pay extends Wechat
      * @param  [type] $remark   [description]
      * @return [type]           [description]
      */
-    public function redpack($orderId, $openid, $money, $sendName, $wishing, $remark)
+    public static function redpack($orderId, $openid, $money, $sendName, $wishing, $actName, $remark)
     {
         $params = [
             'nonce_str'    => uniqid(),
@@ -201,6 +205,7 @@ class Pay extends Wechat
             'total_amount' => $money * 100,
             'total_num'    => 1,
             'wishing'      => $wishing,
+            'act_name'     => $actName,
             'client_ip'    => self::_getClientIp(),
             'remark'       => $remark,
         ];

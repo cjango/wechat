@@ -48,6 +48,11 @@ class Wechat
         }
     }
 
+    public static function getConfig($key)
+    {
+        return self::$config[$key] ?? null;
+    }
+
     /**
      * 初始化
      * @param  array   $config
